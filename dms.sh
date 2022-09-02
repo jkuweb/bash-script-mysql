@@ -151,13 +151,14 @@ function_create_database() {
 }
 
 function create_user_mysql() {
-	PASSWD="rascaspas"
     write_title "4. Creación del usuario"
+    echo -n " Indique contraseña para el usuario ${username}: "; read passwd
 
-	if[ -f /root/.my.conf ]; then 
-		mysql -e 'CREATE USER "$username"@"%" IDENTIFIED BY "${PASSWD}";' 
+	mysql -e "CREATE USER '$username'@'%' IDENTIFIED BY '${$passwd}';" 
+	mysql -e "GRANT ALL PRIVILEGES ON ${db_name}.* TO '${username}'@'%';"
+	mysql -e "FLUSH PRIVILEGES"
+		
 		 
-	fi
 	say _done
 }
 
