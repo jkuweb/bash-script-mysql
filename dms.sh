@@ -44,17 +44,6 @@ function sysupdate() {
     say_done
 }
 
-function install_vim() {
-	apt install vim -y 
-	git clone https://github.com/jkuweb/my-vim.git	
-	chown -R $username:$username my-vim/
-	rm -rf /home/$username/.vim
-	mv -f my-vim/.vim* /home/$username/
-	git clone https://github.com/VundleVim/Vundle.vim.git /home/$username/.vim/bundle/Vundle.vim  
-	
-	rm -rf /root/my-vim 
-    say_done
-}
 
 # 5. Tunnear el archivo .bashrc
 function tunning_bashrc() {
@@ -138,6 +127,7 @@ function install_mysql-server() {
     say_done
 }
 
+
 # Set Bind address 
 function set_mysql_bind_address() {
     write_title "Modificamos el valor de bind address"
@@ -186,7 +176,6 @@ is_root_user                    #  0. Verificar si es usuario root o no
 set_hostname                    #  1. Configurar Hostname
 set_hour                        #  2. Configurar zona horaria
 sysupdate
-install_vim
 tunning_bashrc                  #  5. Tunnear el archivo .bashrc
 install_owasp_core_rule_set
 install_modevasive
