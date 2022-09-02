@@ -24,11 +24,8 @@ function set_hostname() {
 	if [ "$config_host" == "y" ]; then
 		echo " Ingrese un nombre para identificar a este servidor"
 		echo -n " (por ejemplo: myserver) "; read host_name
-		echo -n " ¿Cúal será el dominio principal? "; read domain_name
 		echo $host_name > /etc/hostname
 		hostname -F /etc/hostname
-		echo "127.0.0.1    localhost.localdomain    localhost" >> /etc/hosts 
-		echo "$serverip    $host_name.$domain_name  $host_name" >> /etc/hosts 
 	fi
 	say_done
 }
@@ -143,7 +140,7 @@ function set_mysql_bind_address() {
     say_done
 }
 
-function_create_database() {
+function create_database() {
     write_title "4. Creación de una base de datos"
     echo -n " Indique un nombre para la base de datos: "; read db_name
 	mysql -e "CREATE DATABASE ${db_name};" 
@@ -154,11 +151,9 @@ function create_user_mysql() {
     write_title "4. Creación del usuario"
     echo -n " Indique contraseña para el usuario ${username}: "; read passwd
 
-	mysql -e "CREATE USER '$username'@'%' IDENTIFIED BY '${$passwd}';" 
+	mysql -e "CREATE USER '${username}'@'%' IDENTIFIED BY '${$passwd}';" 
 	mysql -e "GRANT ALL PRIVILEGES ON ${db_name}.* TO '${username}'@'%';"
-	mysql -e "FLUSH PRIVILEGES"
-		
-		 
+	mysql -e "FLUSH PRIVILEGES;"
 	say _done
 }
 
@@ -188,4 +183,5 @@ install_vim
 install_mysql-server
 set_mysql_bind_address 
 create_user_mysql
-function_create_database
+create_database
+create_user_mysql
