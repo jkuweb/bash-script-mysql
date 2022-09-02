@@ -53,6 +53,18 @@ function set_new_user() {
 }
 
 
+function install_vim() {
+	apt install vim -y 
+	git clone https://github.com/jkuweb/my-vim.git	
+	chown -R $username:$username my-vim/
+	rm -rf /home/$username/.vim
+	mv -f my-vim/.vim* /home/$username/
+	git clone https://github.com/VundleVim/Vundle.vim.git /home/$username/.vim/bundle/Vundle.vim  
+	
+	rm -rf /root/my-vim 
+    say_done
+}
+
 # 5. Tunnear el archivo .bashrc
 function tunning_bashrc() {
     write_title "19. Reemplazar .bashrc"
@@ -157,18 +169,20 @@ function create_user_mysql() {
 	say_done
 }
 
-# 11. Instalar y tunear VIM
-function install_vim() {
-	apt install vim -y 
-	git clone https://github.com/jkuweb/my-vim.git	
-	chown -R $username:$username my-vim/
-	rm -rf /home/$username/.vim
-	mv -f my-vim/.vim* /home/$username/
-	git clone https://github.com/VundleVim/Vundle.vim.git /home/$username/.vim/bundle/Vundle.vim  
-	
-	rm -rf /root/my-vim 
-    say_done
+
+function define_ufw_rules() {
+    write_title "Definir las reglas para ufw"
+    write_title "Habilitar ufw"
+	ufw enable
+    write_title "Permitir conexiones ssh"
+	ufw allow ssh 
+	ufw status
+    write_title "Permitir conexiones del servidor donde tenemos alojada la app"
+    echo  " Indique la IP del servidor donde esta alojada la APP "; read app_server_ip
+	ufw allow from $app_server_ip to any port 3306
+	say_done
 }
+
 
 set_pause_on                    #  Configurar modo de pausa entre funciones
 is_root_user                    #  0. Verificar si es usuario root o no
@@ -176,6 +190,7 @@ set_hostname                    #  1. Configurar Hostname
 set_hour                        #  2. Configurar zona horaria
 sysupdate
 set_new_user                    #  4. Crear un nuevo usuario con privilegios
+install_vim
 tunning_bashrc                  #  5. Tunnear el archivo .bashrc
 install_owasp_core_rule_set
 install_modevasive
@@ -185,3 +200,4 @@ set_mysql_bind_address
 create_user_mysql
 create_database
 create_user_mysql
+define_ufw_rules
