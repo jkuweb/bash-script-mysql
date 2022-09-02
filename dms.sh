@@ -144,7 +144,7 @@ function create_database() {
     write_title "4. Creación de una base de datos"
     echo -n " Indique un nombre para la base de datos: "; read db_name
 	mysql -e "CREATE DATABASE ${db_name};" 
-	say _done
+	say_done
 }
 
 function create_user_mysql() {
@@ -154,7 +154,7 @@ function create_user_mysql() {
 	mysql -e "CREATE USER '${username}'@'%' IDENTIFIED BY '${passwd}';" 
 	mysql -e "GRANT ALL PRIVILEGES ON ${db_name}.* TO '${username}'@'%';"
 	mysql -e "FLUSH PRIVILEGES;"
-	say _done
+	say_done
 }
 
 # 11. Instalar y tunear VIM
