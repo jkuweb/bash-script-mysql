@@ -137,20 +137,17 @@ function install_mysql-server() {
     say_done
 }
 
-# Bind address 
-function change_mysql_bind_address() {
-	cat template/mysql_bind_address > /etc/mysql/mariadb.conf.d/50-server.cnf
+# Set Bind address 
+function set_mysql_bind_address() {
+	cat templates/mysql_bind_address > /etc/mysql/mariadb.conf.d/50-server.cnf
     say_done
 }
 
 function_create_database() {
     write_title "4. Creación de una base de datos"
     echo -n " Indique un nombre para la base de datos: "; read db_name
-	if[ -f /root/.my.conf ]; then 
-		mysql -e 'CREATE DATABASE ${db_name};' 
-	fi
+	mysql -e "CREATE DATABASE ${db_name};" 
 	say _done
-
 }
 
 function create_user_mysql() {
@@ -188,6 +185,6 @@ install_owasp_core_rule_set
 install_modevasive
 install_vim
 install_mysql-server
-change_mysql_bind_address 
+set_mysql_bind_address 
 create_user_mysql
 function_create_database
