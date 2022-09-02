@@ -163,10 +163,10 @@ function define_ufw_rules() {
 	ufw enable
     write_title "Permitir conexiones ssh"
 	ufw allow ssh 
-	ufw status
     write_title "Permitir conexiones del servidor donde tenemos alojada la app"
     echo  " Indique la IP del servidor donde esta alojada la APP "; read app_server_ip
 	ufw allow from $app_server_ip to any port 3306
+	ufw status
 	say_done
 }
 
