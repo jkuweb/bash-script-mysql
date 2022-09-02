@@ -134,10 +134,34 @@ function install_owasp_core_rule_set() {
 function install_mysql-server() {
 	apt install default-mysql-server -y
 	mysql_secure_installation
+    say_done
+}
+
+# Bind address 
+function change_mysql_bind_address() {
+	cat template/mysql_bind_address > /etc/mysql/mariadb.conf.d/50-server.cnf
+    say_done
+}
+
+function_create_database() {
+    write_title "4. Creación de una base de datos"
+    echo -n " Indique un nombre para la base de datos: "; read db_name
+	if[ -f /root/.my.conf ]; then 
+		mysql -e 'CREATE DATABASE ${db_name};' 
+	fi
+	say _done
+
 }
 
 function create_user_mysql() {
-	mysql 
+	PASSWD="rascaspas"
+    write_title "4. Creación del usuario"
+
+	if[ -f /root/.my.conf ]; then 
+		mysql -e 'CREATE USER "$username"@"%" IDENTIFIED BY "${PASSWD}";' 
+		 
+	fi
+	say _done
 }
 
 # 11. Instalar y tunear VIM
@@ -164,3 +188,6 @@ install_owasp_core_rule_set
 install_modevasive
 install_vim
 install_mysql-server
+change_mysql_bind_address 
+create_user_mysql
+function_create_database
