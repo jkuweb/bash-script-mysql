@@ -44,15 +44,6 @@ function sysupdate() {
     say_done
 }
 
-#  4. Crear un nuevo usuario con privilegios
-function set_new_user() {
-    write_title "4. Creación de un nuevo usuario"
-    echo -n " Indique un nombre para el nuevo usuario: "; read username
-    adduser $username
-    say_done
-}
-
-
 function install_vim() {
 	apt install vim -y 
 	git clone https://github.com/jkuweb/my-vim.git	
@@ -141,6 +132,7 @@ function install_owasp_core_rule_set() {
 
 # Install mysql-server 
 function install_mysql-server() {
+    write_title "Instalación de mysql-server"
 	apt install default-mysql-server -y
 	mysql_secure_installation
     say_done
@@ -148,19 +140,22 @@ function install_mysql-server() {
 
 # Set Bind address 
 function set_mysql_bind_address() {
+    write_title "Modificamos el valor de bind address"
 	cat templates/mysql_bind_address > /etc/mysql/mariadb.conf.d/50-server.cnf
     say_done
 }
 
 function create_database() {
-    write_title "4. Creación de una base de datos"
+    write_title "Creación de una base de datos"
     echo -n " Indique un nombre para la base de datos: "; read db_name
 	mysql -e "CREATE DATABASE ${db_name};" 
 	say_done
 }
 
+
 function create_user_mysql() {
-    write_title "4. Creación del usuario"
+    write_title "Creación del usuario"
+    echo -n " Indique el nombre de usuario para la base de datos: "; read username
     echo -n " Indique contraseña para el usuario ${username}: "; read passwd
 
 	mysql -e "CREATE USER '${username}'@'%' IDENTIFIED BY '${passwd}';" 
@@ -171,6 +166,8 @@ function create_user_mysql() {
 
 
 function define_ufw_rules() {
+    write_title "Instalar ufw"
+	apt install ufw
     write_title "Definir las reglas para ufw"
     write_title "Habilitar ufw"
 	ufw enable
@@ -189,7 +186,6 @@ is_root_user                    #  0. Verificar si es usuario root o no
 set_hostname                    #  1. Configurar Hostname
 set_hour                        #  2. Configurar zona horaria
 sysupdate
-set_new_user                    #  4. Crear un nuevo usuario con privilegios
 install_vim
 tunning_bashrc                  #  5. Tunnear el archivo .bashrc
 install_owasp_core_rule_set
@@ -197,7 +193,6 @@ install_modevasive
 install_vim
 install_mysql-server
 set_mysql_bind_address 
-create_user_mysql
 create_database
 create_user_mysql
 define_ufw_rules
