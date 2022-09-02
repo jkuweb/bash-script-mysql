@@ -151,7 +151,7 @@ function create_user_mysql() {
     write_title "4. Creación del usuario"
     echo -n " Indique contraseña para el usuario ${username}: "; read passwd
 
-	mysql -e "CREATE USER '${username}'@'%' IDENTIFIED BY '${$passwd}';" 
+	mysql -e "CREATE USER '${username}'@'%' IDENTIFIED BY '${passwd}';" 
 	mysql -e "GRANT ALL PRIVILEGES ON ${db_name}.* TO '${username}'@'%';"
 	mysql -e "FLUSH PRIVILEGES;"
 	say _done
