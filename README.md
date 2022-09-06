@@ -20,7 +20,14 @@
     Marcos Leal Sierra <https://www.linkedin.com/in/marcos-leal-sierra/>
 ================================================================================
 ## Description
-Script to install mysql on a server
+Script to install mysql on a server<br>
+
+    git clone https://github.com/jkuweb/bash-script-mysql.git
+    cd bash-script-mysql
+    chmod +x dms.sh
+    ./dms.sh
+
+
 ## Defined functions
 1. **set_pause_on**
 2. **is_root_user**
