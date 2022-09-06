@@ -171,12 +171,19 @@ function define_ufw_rules() {
 }
 
 
-set_pause_on                    #  Configurar modo de pausa entre funciones
-is_root_user                    #  0. Verificar si es usuario root o no
-set_hostname                    #  1. Configurar Hostname
-set_hour                        #  2. Configurar zona horaria
+function final_step() {
+    write_title "Finalizar deploy"
+	cat templates/texts/bye
+    reboot
+}
+
+
+set_pause_on
+is_root_use
+set_hostna
+set_hour 
 sysupdate
-tunning_bashrc                  #  5. Tunnear el archivo .bashrc
+tunning_bashrc
 install_owasp_core_rule_set
 install_modevasive
 install_vim
@@ -185,3 +192,4 @@ set_mysql_bind_address
 create_database
 create_user_mysql
 define_ufw_rules
+final_step
