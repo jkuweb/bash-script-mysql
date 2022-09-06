@@ -5,11 +5,21 @@ declare -r optional_arg="$1"
 
 export serverip=$(__get_ip)
 
+#Colours
+greenColour="\e[0;32m\033[1m"
+endColour="\033[0m\e[0m"
+redColour="\e[0;31m\033[1m"
+blueColour="\e[0;34m\033[1m"
+yellowColour="\e[0;33m\033[1m"
+purpleColour="\e[0;35m\033[1m"
+turquoiseColour="\e[0;36m\033[1m"
+grayColour="\e[0;37m\033[1m"
+
 # 0. Verificar si es usuario root o no
 function is_root_user() {
 	if [ echo whoami != "root" ]; then 
-		echo "Permiso denegado."
-		echo "Este programa solo puede ser ejecutado por el usuario root"
+		echo -e "\n${redColour}[!]Permiso denegado.${endColour}"
+		echo -e "\n${blueColour}Este programa solo puede ser ejecutado por el usuario root.${endColour}"
 		exit
 	else
 		clear
@@ -19,11 +29,11 @@ function is_root_user() {
 
 # 1. Configurar Hostname
 function set_hostname() {
-	write_title "1. Configurar Hostname"
-	echo -n " ¿Desea configurar un hostname? (y/n): "; read config_host
+	write_title "${purpleColour}1. Configurar Hostname${endColour}"
+	echo -e "\n${yellowColour} ¿Desea configurar un hostname? (y/n): ${endColour}"; read config_host
 	if [ "$config_host" == "y" ]; then
-		echo " Ingrese un nombre para identificar a este servidor"
-		echo -n " (por ejemplo: myserver) "; read host_name
+		echo -e "\n${grayColour}Ingrese un nombre para identificar a este servidor${endColour}"
+		echo -e "\n${blueColour}(por ejemplo: myserver) ${endColour}"; read host_name
 		echo $host_name > /etc/hostname
 		hostname -F /etc/hostname
 	fi
@@ -119,6 +129,7 @@ function install_owasp_core_rule_set() {
     say_done
 }
 
+
 # Install mysql-server 
 function install_mysql-server() {
     write_title "Instalación de mysql-server"
@@ -134,6 +145,7 @@ function set_mysql_bind_address() {
 	cat templates/mysql_bind_address > /etc/mysql/mariadb.conf.d/50-server.cnf
     say_done
 }
+
 
 function create_database() {
     write_title "Creación de una base de datos"
