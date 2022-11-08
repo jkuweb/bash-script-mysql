@@ -68,6 +68,14 @@ function sysupdate() {
     say_done
 }
 
+# Crear un nuevo usuario con privilegios
+function set_new_user() {
+    write_title "Creación de un nuevo usuario"
+    echo -n " Indique un nombre para el nuevo usuario: "; read username
+    adduser $username
+    say_done
+}
+
 # Instrucciones para generar una RSA Key
 function give_instructions() {
     write_title "Generación de llave RSA en su ordenador local"
@@ -322,8 +330,7 @@ set_hostname
 set_hour
 set_locale                        
 sysupdate                       
-set_new_user                    
-give_instructions               
+set_new_user         
 move_rsa                        
 ssh_reconfigure                 
 set_iptables_rules              
