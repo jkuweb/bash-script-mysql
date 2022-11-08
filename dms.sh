@@ -43,6 +43,15 @@ function set_hostname() {
         say_done
 }
 
+# Configurar locale
+function set_locale() {
+	write_title "Configurar locale"
+	export LANGUAJE=es_ES.UTF-8
+	export LANG=es_ES.UTF-8
+	export LC=es_ES.UTF-8
+	locale-gen es_ES.UTF-8
+	dpkg-reconfigure locales
+}
 
 # Set time zone
 function set_hour() {
@@ -59,6 +68,75 @@ function sysupdate() {
     say_done
 }
 
+# Instrucciones para generar una RSA Key
+function give_instructions() {
+    write_title "Generación de llave RSA en su ordenador local"
+    echo " *** SI NO TIENE UNA LLAVE RSA PÚBLICA EN SU ORDENADOR, GENERE UNA ***"
+    echo "     Siga las instrucciones y pulse INTRO cada vez que termine una"
+    echo "     tarea para recibir una nueva instrucción"
+    echo " "
+    echo "     EJECUTE LOS SIGUIENTES COMANDOS:"
+    echo -n "     a) ssh-keygen "; read foo1
+    echo -n "     b) scp .ssh/id_rsa.pub $username@$serverip:/home/$username/ "; read foo2
+    say_done
+}
+
+
+#  Mover la llave pública RSA generada
+function move_rsa() {
+    write_title "Se moverá la llave pública RSA generada en el paso 5"
+    mkdir /home/$username/.ssh
+    mv /home/$username/id_rsa.pub /home/$username/.ssh/authorized_keys
+    chmod 700 /home/$username/.ssh
+    chmod 600 /home/$username/.ssh/authorized_keys
+    chown -R $username:$username /home/$username/.ssh
+    say_done
+}
+
+#  Securizar SSH
+function ssh_reconfigure() {
+    write_title "Securizar accesos SSH"
+    
+    if [ "$optional_arg" == "--custom" ]; then
+        echo -n "Puerto SSH (Ej: 372): "; read puerto
+    else
+        puerto="372"
+    fi
+
+    sed s/USERNAME/$username/g templates/sshd_config > /tmp/sshd_config
+    sed s/PUERTO/$puerto/g /tmp/sshd_config > /etc/ssh/sshd_config
+    service ssh restart
+    say_done
+}
+
+
+#  Establecer reglas para iptables
+function set_iptables_rules() {
+    write_title "Establecer reglas para iptables (firewall)"
+    apt install iptables -y 
+    sed s/PUERTO/$puerto/g templates/iptables > /etc/iptables.firewall.rules
+    iptables-restore < /etc/iptables.firewall.rules
+    say_done
+}
+
+
+#  Crear script de automatizacion iptables
+function create_iptable_script() {
+    write_title "Crear script de automatización de reglas de iptables tras reinicio"
+    cat templates/firewall > /etc/network/if-pre-up.d/firewall
+    chmod +x /etc/network/if-pre-up.d/firewall
+    say_done
+}
+
+
+# Instalar fail2ban
+function install_fail2ban() {
+    # para eliminar una regla de fail2ban en iptables utilizar:
+    # iptables -D fail2ban-ssh -s IP -j DROP
+    write_title "Instalar fail2ban"    
+    apt install fail2ban -y
+    say_done
+}
 
 # Tunning .bashrc
 function tunning_bashrc() {
@@ -93,39 +171,63 @@ function install_modevasive() {
 }
 
 
-# Install OWASP for ModSecuity
+# Instalar ModEvasive
+function install_modevasive() {
+    write_title "Instalar ModEvasive"
+    echo -n " Indique e-mail para recibir alertas: "; read inbox
+    
+    if [ "$inbox" == "" ]; then
+        inbox="root@localhost"
+    fi
+    
+    apt install libapache2-mod-evasive -y
+    mkdir /var/log/mod_evasive
+    chown www-data:www-data /var/log/mod_evasive/
+    modevasive="/etc/apache2/mods-available/mod-evasive.conf"
+    sed s/MAILTO/$inbox/g templates/mod-evasive > $modevasive
+    a2enmod evasive
+    service apache2 restart
+    say_done
+}
+
+
+# Instalar OWASP para ModSecuity
 function install_owasp_core_rule_set() {
-    write_title "${purpleColour}14. Instalar OWASP ModSecurity Core Rule Set${endColour}"
+    write_title "Instalar OWASP ModSecurity Core Rule Set"
+    apt install libmodsecurity3 -y
+    
+    write_title "Clonar repositorio"
+    mkdir /etc/apache2/modsecurity.d/
+    git clone https://github.com/coreruleset/coreruleset.git /etc/apache2/modsecurity.d/       
+    
+    
+    write_title "Mover archivo de configuración"    
+    mv /etc/apache2/modsecurity.d/crs-setup.conf.example \
+     /etc/apache2/modsecurity.d/crs-setup.conf
+    
+    write_title "Renombrar reglas de pre y post ejecución" 
 
-    write_title "${purpleColour}14.2 Clonar repositorio${endColour}"
-    mkdir /etc/apache2/modsecurity.d
-    git clone https://github.com/SpiderLabs/owasp-modsecurity-crs /etc/apache2/modsecurity.d
-
-    write_title "${purpleColour}14.3 Mover archivo de configuración${endColour}"
-    mv /etc/apache2/modsecurity.d/crs-setup.conf.example /etc/apache2/modsecurity.d/crs-setup.conf
-
-    write_title "${purpleColour}14.4 Renombrar reglas de pre y post ejecución${endColour}"
     mv /etc/apache2/modsecurity.d/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example \
-        /etc/apache2/modsecurity.d/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+     /etc/apache2/modsecurity.d/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+
     mv /etc/apache2/modsecurity.d/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example \
-        /etc/apache2/modsecurity.d/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
-
-    write_title "${purpleColour}14.4 Reemplazar configuración del módulo${endColour}"
-    cp templates/security2 /etc/apache2/mods-available/security2.conf
-
-
-    modsecrec="/etc/modsecurity/modsecurity.conf${endColour}"
-    sed s/SecRuleEngine\ DetectionOnly/SecRuleEngine\ On/g $modsecrec > /tmp/salida
-    mv /tmp/salida /etc/modsecurity/modsecurity.conf
-
+     /etc/apache2/modsecurity.d/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+    write_title "modsecurity.conf-recommended" 
+    touch /etc/apache2/modsecurity.d/modsecurity.conf
+    echo templates/modsecurity >> /etc/apache2/modsecurity.d/modsecurity.conf
+    
+    modsecrec="/etc/apache2/modsecurity.d/modsecurity.conf"
+    sed s/SecRuleEngine\ DetectionOnly/SecRuleEngine\ On/g $modsecrec > /tmp/salida   
+    mv /tmp/salida /etc/apache2/modsecurity.d/modsecurity.conf
+    
     if [ "$optional_arg" == "--custom" ]; then
         echo -n "Firma servidor: "; read firmaserver
         echo -n "Powered: "; read poweredby
     else
         firmaserver="Oracle Solaris 11.2"
         poweredby="n/a"
-    fi
-
+    fi    
+    
     modseccrs10su="/etc/apache2/modsecurity.d/crs-setup.conf"
     echo "SecServerSignature \"$firmaserver\"" >> $modseccrs10su
     echo "Header set X-Powered-By \"$poweredby\"" >> $modseccrs10su
@@ -212,18 +314,25 @@ function final_step() {
 }
 
 
-set_pause_on
-is_root_user
-set_hostname
+
+set_pause_on                   
+
+is_root_user                    
+set_hostname                    
 set_hour
-sysupdate
-tunning_bashrc
-install_owasp_core_rule_set
-install_modevasive
-install_vim
-install_mysql-server
-set_mysql_bind_address
-create_database
-create_user_database
-define_ufw_rules
-final_step
+set_locale                        
+sysupdate                       
+set_new_user                    
+give_instructions               
+move_rsa                        
+ssh_reconfigure                 
+set_iptables_rules              
+create_iptable_script           
+install_fail2ban                
+install_mysql-server                         
+install_owasp_core_rule_set       			
+install_modevasive             
+config_fail2ban          
+tunning_vim                   
+kernel_config  
+final_step 
