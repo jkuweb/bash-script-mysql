@@ -159,93 +159,6 @@ function tunning_bashrc() {
 }
 
 
-# Install ModEvasive
-function install_modevasive() {
-    write_title "${purpleColour}16. Instalar ModEvasive${endColour}"
-    echo -n -e "\n${blueColour} Indique e-mail para recibir alertas: ${endColour}"; read inbox
-
-    if [ "$inbox" == "" ]; then
-        inbox="root@localhost"
-    fi
-
-    apt install libapache2-mod-evasive -y
-    mkdir /var/log/mod_evasive
-    chown www-data:www-data /var/log/mod_evasive/
-    modevasive="/etc/apache2/mods-available/mod-evasive.conf"
-    sed s/MAILTO/$inbox/g templates/mod-evasive > $modevasive
-    a2enmod evasive
-    service apache2 restart
-    say_done
-}
-
-
-# Instalar ModEvasive
-function install_modevasive() {
-    write_title "Instalar ModEvasive"
-    echo -n " Indique e-mail para recibir alertas: "; read inbox
-    
-    if [ "$inbox" == "" ]; then
-        inbox="root@localhost"
-    fi
-    
-    apt install libapache2-mod-evasive -y
-    mkdir /var/log/mod_evasive
-    chown www-data:www-data /var/log/mod_evasive/
-    modevasive="/etc/apache2/mods-available/mod-evasive.conf"
-    sed s/MAILTO/$inbox/g templates/mod-evasive > $modevasive
-    a2enmod evasive
-    service apache2 restart
-    say_done
-}
-
-
-# Instalar OWASP para ModSecuity
-function install_owasp_core_rule_set() {
-    write_title "Instalar OWASP ModSecurity Core Rule Set"
-    apt install libmodsecurity3 -y
-    
-    write_title "Clonar repositorio"
-    mkdir /etc/apache2/modsecurity.d/
-    git clone https://github.com/coreruleset/coreruleset.git /etc/apache2/modsecurity.d/       
-    
-    
-    write_title "Mover archivo de configuración"    
-    mv /etc/apache2/modsecurity.d/crs-setup.conf.example \
-     /etc/apache2/modsecurity.d/crs-setup.conf
-    
-    write_title "Renombrar reglas de pre y post ejecución" 
-
-    mv /etc/apache2/modsecurity.d/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example \
-     /etc/apache2/modsecurity.d/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-
-    mv /etc/apache2/modsecurity.d/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example \
-     /etc/apache2/modsecurity.d/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
-    write_title "modsecurity.conf-recommended" 
-    touch /etc/apache2/modsecurity.d/modsecurity.conf
-    echo templates/modsecurity >> /etc/apache2/modsecurity.d/modsecurity.conf
-    
-    modsecrec="/etc/apache2/modsecurity.d/modsecurity.conf"
-    sed s/SecRuleEngine\ DetectionOnly/SecRuleEngine\ On/g $modsecrec > /tmp/salida   
-    mv /tmp/salida /etc/apache2/modsecurity.d/modsecurity.conf
-    
-    if [ "$optional_arg" == "--custom" ]; then
-        echo -n "Firma servidor: "; read firmaserver
-        echo -n "Powered: "; read poweredby
-    else
-        firmaserver="Oracle Solaris 11.2"
-        poweredby="n/a"
-    fi    
-    
-    modseccrs10su="/etc/apache2/modsecurity.d/crs-setup.conf"
-    echo "SecServerSignature \"$firmaserver\"" >> $modseccrs10su
-    echo "Header set X-Powered-By \"$poweredby\"" >> $modseccrs10su
-
-    a2enmod headers
-    service apache2 restart
-    say_done
-}
-
-
 # Install y tunning VIM
 function install_vim() {
         apt install vim -y
@@ -330,15 +243,18 @@ set_hostname
 set_hour
 set_locale                        
 sysupdate                       
-set_new_user         
+set_new_user 
+give_instructions        
 move_rsa                        
 ssh_reconfigure                 
 set_iptables_rules              
 create_iptable_script           
 install_fail2ban                
-install_mysql-server                         
-install_owasp_core_rule_set       			
-install_modevasive             
+install_mysql-server
+set_mysql_bind_address 
+create_database   
+create_user_database 
+define_ufw_rules          
 config_fail2ban          
 tunning_vim                   
 kernel_config  
